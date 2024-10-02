@@ -1,11 +1,19 @@
 //const { get } = require("cypress/types/lodash");
 
 describe("Hacker Stories", () => {
+  // Aqui espera a requisão aparecer para depois seguir os testes
   beforeEach(() => {
-    cy.intercept("GET", "**/search?query=React&page=0").as("getReact");
-    cy.visit("/");
+    cy.intercept({
+      method: "GET",
+      pathname: "**/search",
+      query: {
+        query: "React",
+        page: "0",
+      },
+    }).as("getStories");
 
-    cy.wait("@getReact");
+    cy.visit("/");
+    cy.wait("@getStories");
   });
 
   it("shows the footer", () => {
@@ -23,11 +31,11 @@ describe("Hacker Stories", () => {
     it.skip("shows the right data for all rendered stories", () => {});
 
     it('shows 20 stories, then the next 20 after clicking "More"', () => {
+      cy.intercept("GET", "**/search?query=React&page=1").as("getNextStories");
       cy.get(".item").should("have.length", 20);
 
       cy.contains("More").click();
-
-      cy.assertLoadingIsShownAndHidden();
+      cy.wait("@getNextStories");
 
       cy.get(".item").should("have.length", 40);
     });
@@ -68,13 +76,17 @@ describe("Hacker Stories", () => {
     const newTerm = "Cypress";
 
     beforeEach(() => {
+      cy.intercept("GET", `**/search?query=${newTerm}&page=0`).as(
+        "getNewTermStories"
+      );
+
       cy.get("#search").clear();
     });
 
     it("types and hits ENTER", () => {
       cy.get("#search").type(`${newTerm}{enter}`);
 
-      cy.assertLoadingIsShownAndHidden();
+      cy.wait("@getNewTermStories");
 
       cy.get(".item").should("have.length", 20);
       cy.get(".item").first().should("contain", newTerm);
