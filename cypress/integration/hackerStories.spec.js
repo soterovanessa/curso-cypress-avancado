@@ -1,19 +1,59 @@
 //const { get } = require("cypress/types/lodash");
 
 describe("Hacker Stories", () => {
-  // Aqui espera a requisão aparecer para depois seguir os testes
-  beforeEach(() => {
-    cy.intercept({
-      method: "GET",
-      pathname: "**/search",
-      query: {
-        query: "React",
-        page: "0",
-      },
-    }).as("getStories");
+  const initialTerm = "React";
+  const newTerm = "Cypress";
 
-    cy.visit("/");
-    cy.wait("@getStories");
+  context("Hitting the real API", () => {
+    // Aqui espera a requisão aparecer para depois seguir os testes
+    beforeEach(() => {
+      cy.intercept({
+        method: "GET",
+        pathname: "**/search",
+        query: {
+          query: initialTerm,
+          page: "0",
+        },
+      }).as("getStories");
+
+      cy.visit("/");
+      cy.wait("@getStories");
+    });
+
+    it('shows 20 stories, then the next 20 after clicking "More"', () => {
+      cy.intercept({
+        method: "GET",
+        pathname: "**/search",
+        query: {
+          query: initialTerm,
+          page: "1",
+        },
+      }).as("getNextStories");
+
+      cy.get(".item").should("have.length", 20);
+
+      cy.contains("More").should("be.visible").click();
+      cy.wait("@getNextStories");
+
+      cy.get(".item").should("have.length", 40);
+    });
+
+    it("searches via the last searched term", () => {
+      cy.intercept("GET", `**/search?query=${newTerm}&page=0`).as(
+        "getNewTermStories"
+      );
+      cy.get("#search").clear().type(`${newTerm}{enter}`);
+
+      cy.wait("@getNewTermStories");
+
+      cy.get(`button:contains(${initialTerm})`).should("be.visible").click();
+
+      cy.wait("@getStories");
+
+      cy.get(".item").should("have.length", 20);
+      cy.get(".item").first().should("contain", initialTerm);
+      cy.get(`button:contains(${newTerm})`).should("be.visible");
+    });
   });
 
   it("shows the footer", () => {
@@ -29,16 +69,6 @@ describe("Hacker Stories", () => {
     // This is why this test is being skipped.
     // TODO: Find a way to test it out.
     it.skip("shows the right data for all rendered stories", () => {});
-
-    it('shows 20 stories, then the next 20 after clicking "More"', () => {
-      cy.intercept("GET", "**/search?query=React&page=1").as("getNextStories");
-      cy.get(".item").should("have.length", 20);
-
-      cy.contains("More").click();
-      cy.wait("@getNextStories");
-
-      cy.get(".item").should("have.length", 40);
-    });
 
     it("shows only nineteen stories after dimissing the first story", () => {
       cy.get(".button-small").first().click();
@@ -100,20 +130,6 @@ describe("Hacker Stories", () => {
     });
 
     context("Last searches", () => {
-      it("searches via the last searched term", () => {
-        cy.get("#search").type(`${newTerm}{enter}`);
-
-        cy.wait("@getNewTermStories");
-
-        cy.get(`button:contains(${initialTerm})`).should("be.visible").click();
-
-        cy.wait("@getStories");
-
-        cy.get(".item").should("have.length", 20);
-        cy.get(".item").first().should("contain", initialTerm);
-        cy.get(`button:contains(${newTerm})`).should("be.visible");
-      });
-
       it("shows a max of 5 buttons for the last searched terms", () => {
         const faker = require("faker");
 
