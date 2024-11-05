@@ -79,7 +79,7 @@ describe("Hacker Stories", () => {
         // and so, how can I assert on the data?
         // This is why this test is being skipped.
         // TODO: Find a way to test it out.
-        it.only("shows the right data for all rendered stories", () => {
+        it("shows the right data for all rendered stories", () => {
           cy.get(".item")
             .first()
             .should("contain", stories.hits[0].title)
@@ -109,16 +109,17 @@ describe("Hacker Stories", () => {
 
         // Teste para ordernar
         context("Order by", () => {
-          it.only("orders by title", () => {
+          it("orders by title", () => {
             cy.get(".list-header-button:contains(Title)")
               .as("titleHeader")
+              .should("be.visible")
               .click();
 
             cy.get(".item")
               .first()
               .should("be.visible")
               .and("contain", stories.hits[0].title);
-            cy.get(`.item a:contains(${stories.hits[0].url})`).should(
+            cy.get(`.item a:contains(${stories.hits[0].title})`).should(
               "have.attr",
               "href",
               stories.hits[0].url
@@ -130,18 +131,69 @@ describe("Hacker Stories", () => {
               .first()
               .should("be.visible")
               .and("contain", stories.hits[1].title);
-            cy.get(`.item a:contains(${stories.hits[1].url})`).should(
+            cy.get(`.item a:contains(${stories.hits[1].title})`).should(
               "have.attr",
               "href",
-              stories.hits[0].url
+              stories.hits[1].url
             );
           });
 
-          it("orders by author", () => {});
+          it("orders by author", () => {
+            cy.get(".list-header-button:contains(Author)")
+              .as("authorHeader")
+              .should("be.visible")
+              .click();
 
-          it("orders by comments", () => {});
+            cy.get(".item")
+              .first()
+              .should("be.visible")
+              .and("contain", stories.hits[0].author);
 
-          it("orders by points", () => {});
+            cy.get("@authorHeader").click();
+
+            cy.get(".item")
+              .first()
+              .should("be.visible")
+              .and("contain", stories.hits[1].author);
+          });
+
+          it("orders by comments", () => {
+            cy.get(".list-header-button:contains(Comments)")
+              .as("commentsHeader")
+              .should("be.visible")
+              .click();
+
+            cy.get(".item")
+              .first()
+              .should("be.visible")
+              .and("contain", stories.hits[1].num_comments);
+
+            cy.get("@commentsHeader").click();
+
+            cy.get(".item")
+              .first()
+              .should("be.visible")
+              .and("contain", stories.hits[0].num_comments);
+          });
+
+          it("orders by points", () => {
+            cy.get(".list-header-button:contains(Points)")
+              .as("pointsHeader")
+              .should("be.visible")
+              .click();
+
+            cy.get(".item")
+              .first()
+              .should("be.visible")
+              .and("contain", stories.hits[1].points);
+
+            cy.get("@pointsHeader").click();
+
+            cy.get(".item")
+              .first()
+              .should("be.visible")
+              .and("contain", stories.hits[0].points);
+          });
         });
       });
     });
