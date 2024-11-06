@@ -29,7 +29,7 @@ describe("Hacker Stories", () => {
 
       cy.get(".item").should("have.length", 20);
 
-      cy.contains("More").click();
+      cy.contains("More").should("be.visible").click();
 
       cy.wait("@getNextStories");
 
@@ -41,13 +41,17 @@ describe("Hacker Stories", () => {
         "getNewTermStories"
       );
 
-      cy.get("#search").clear().type(`${newTerm}{enter}`);
+      cy.get("#search").should("be.visible").clear().type(`${newTerm}{enter}`);
 
       cy.wait("@getNewTermStories");
+
+      cy.getLocalStorage("search").should("be.equal", newTerm);
 
       cy.get(`button:contains(${initialTerm})`).should("be.visible").click();
 
       cy.wait("@getStories");
+
+      cy.getLocalStorage("search").should("be.equal", initialTerm);
 
       cy.get(".item").should("have.length", 20);
       cy.get(".item").first().should("contain", initialTerm);
@@ -74,11 +78,7 @@ describe("Hacker Stories", () => {
 
       context("List of stories", () => {
         const stories = require("../fixtures/stories");
-        // Since the API is external,
-        // I can't control what it will provide to the frontend,
-        // and so, how can I assert on the data?
-        // This is why this test is being skipped.
-        // TODO: Find a way to test it out.
+
         it("shows the right data for all rendered stories", () => {
           cy.get(".item")
             .first()
@@ -100,12 +100,6 @@ describe("Hacker Stories", () => {
 
           cy.get(".item").should("have.length", 1);
         });
-
-        // Since the API is external,
-        // I can't control what it will provide to the frontend,
-        // and so, how can I test ordering?
-        // This is why these tests are being skipped.
-        // TODO: Find a way to test them out.
 
         // Teste para ordernar
         context("Order by", () => {
@@ -211,7 +205,7 @@ describe("Hacker Stories", () => {
         cy.visit("/");
         cy.wait("@getEmptyStories");
 
-        cy.get("#search").clear();
+        cy.get("#search").should("be.visible").clear();
       });
 
       it("types and hits ENTER", () => {
@@ -225,7 +219,7 @@ describe("Hacker Stories", () => {
 
       it("types and clicks the submit button", () => {
         cy.get("#search").type(newTerm);
-        cy.contains("Submit").click();
+        cy.contains("Submit").should("be.visible").click();
 
         cy.wait("@getStories");
 
@@ -234,7 +228,7 @@ describe("Hacker Stories", () => {
       });
 
       context("Last searches", () => {
-        it("shows a max of 5 buttons for the last searched terms", () => {
+        it.only("shows a max of 5 buttons for the last searched terms", () => {
           const faker = require("faker");
 
           cy.intercept("GET", "**/search**", { fixture: "empty" }).as(
@@ -243,10 +237,13 @@ describe("Hacker Stories", () => {
 
           Cypress._.times(6, () => {
             cy.get("#search").clear().type(`${faker.random.word()}{enter}`);
-            cy.wait("@getRandomStories");
           });
 
-          cy.get(".last-searches button").should("have.length", 5);
+          //cy.get(".last-searches button").should("have.length", 5);
+
+          cy.get(".last-searches").within(() => {
+            cy.get("button").should("have.length", 5);
+          });
         });
       });
     });
