@@ -228,7 +228,7 @@ describe("Hacker Stories", () => {
       });
 
       context("Last searches", () => {
-        it.only("shows a max of 5 buttons for the last searched terms", () => {
+        it("shows a max of 5 buttons for the last searched terms", () => {
           const faker = require("faker");
 
           cy.intercept("GET", "**/search**", { fixture: "empty" }).as(
@@ -276,7 +276,7 @@ context("Errors", () => {
 
 // Teste simulando um atraso na API
 // Validar o que o "loading é apresentando quando há um atraso na API"
-it.only('shows a "Loading ..." state before showing the results', () => {
+it('shows a "Loading ..." state before showing the results', () => {
   cy.intercept("GET", "**/search**", {
     delay: 1000,
     fixture: "stories",
